@@ -1,0 +1,17 @@
+.gantt-container {
+    position: relative;
+    width: 100%;
+    height: 800px; /* Essential to give the chart height */
+}
+
+/* Blue Task Bar (Planned) */
+.gantt_task_line {
+    background-color: #3db9d3;
+    border: 1px solid #3db9d3;
+}
+
+/* Green Progress Bar (Actual) */
+.gantt_task_progress {
+    background-color: #4cd964;
+    opacity: 0.8;
+}

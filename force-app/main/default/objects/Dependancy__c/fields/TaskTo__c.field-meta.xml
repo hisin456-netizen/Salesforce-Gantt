@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TaskTo__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Task To</label>
+    <referenceTo>ProjectTask__c</referenceTo>
+    <relationshipLabel>Dependancy (Task To)</relationshipLabel>
+    <relationshipName>Dependancy1</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>
