@@ -23,7 +23,12 @@
                     <lightning-icon icon-name="standard:task" size="small" class="slds-m-right_small"></lightning-icon>
                     {selectedProjectName}
                 </h2>
-                <!-- Placeholder for future buttons (e.g., Change Project) -->
+                <!-- Zoom Controls -->
+                <lightning-button-group>
+                    <lightning-button label="Day" onclick={handleZoom} value="day"></lightning-button>
+                    <lightning-button label="Week" onclick={handleZoom} value="week"></lightning-button>
+                    <lightning-button label="Month" onclick={handleZoom} value="month"></lightning-button>
+                </lightning-button-group>
              </div>
             <div class="gantt-container" lwc:dom="manual"></div>
         </template>

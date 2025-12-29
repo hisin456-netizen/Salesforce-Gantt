@@ -118,6 +118,7 @@ export default class GanttChart extends LightningElement {
         
         // --- 2. Initialization ---
         window.gantt.init(root);
+        this.setZoom("day"); // Default View
         
         // --- 3. Event Handlers ---
         
@@ -215,5 +216,48 @@ export default class GanttChart extends LightningElement {
                 variant: variant
             })
         );
+    }
+
+    handleZoom(event) {
+        const level = event.target.value;
+        this.showToast('Zoom Level', 'Selected: ' + level, 'info'); // Feedback to User
+        this.setZoom(level);
+    }
+
+    setZoom(level) {
+        if(!this.isGanttInitialized) return;
+
+        switch(level) {
+            case "day":
+                window.gantt.config.scale_unit = "day";
+                window.gantt.config.date_scale = "%d %M";
+                window.gantt.config.subscales = []; 
+                window.gantt.config.scale_height = 27;
+                window.gantt.config.min_column_width = 80;
+                break;
+            case "week":
+                window.gantt.config.scale_unit = "week";
+                window.gantt.config.date_scale = "Week %W"; // Display "Week 01", "Week 52"
+                delete window.gantt.templates.date_scale; // Remove previous custom template
+                
+                window.gantt.config.subscales = [
+                    { unit: "day", step: 1, date: "%D" } // Sun, Mon, Tue
+                ];
+                window.gantt.config.scale_height = 50;
+                window.gantt.config.min_column_width = 80;
+                break;
+            case "month":
+                window.gantt.config.scale_unit = "month";
+                window.gantt.config.date_scale = "%F %Y"; // January 2025
+                window.gantt.config.subscales = [
+                     { unit: "week", step: 1, date: "W%W" } // W01, W02
+                ];
+                window.gantt.config.scale_height = 50;
+                window.gantt.config.min_column_width = 80;
+                break;
+        }
+        
+        // Force fully recalculate timeline
+        window.gantt.render(); 
     }
 }
