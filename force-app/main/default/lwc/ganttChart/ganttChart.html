@@ -1,6 +1,31 @@
 <template>
     <div class="slds-box slds-theme_default">
-        <!-- Container for DHTMLX Gantt -->
-        <div class="gantt-container" lwc:dom="manual"></div>
+        <!-- 1. Project Selection (If no context) -->
+        <template if:false={isProjectSelected}>
+             <div class="slds-p-around_medium">
+                <h2 class="slds-text-heading_medium slds-m-bottom_medium">Select a Project</h2>
+                <lightning-combobox
+                    name="projectSelect"
+                    label="Project"
+                    value={selectedProjectId}
+                    placeholder="Select a Project to view..."
+                    options={projectOptions}
+                    onchange={handleProjectChange}
+                    class="slds-m-bottom_large"
+                ></lightning-combobox>
+             </div>
+        </template>
+
+        <!-- 2. Gantt Chart Container (Render only when project selected) -->
+        <template if:true={isProjectSelected}>
+             <div class="slds-grid slds-grid_align-spread slds-p-bottom_small slds-border_bottom slds-m-bottom_small">
+                <h2 class="slds-text-heading_medium">
+                    <lightning-icon icon-name="standard:task" size="small" class="slds-m-right_small"></lightning-icon>
+                    {selectedProjectName}
+                </h2>
+                <!-- Placeholder for future buttons (e.g., Change Project) -->
+             </div>
+            <div class="gantt-container" lwc:dom="manual"></div>
+        </template>
     </div>
 </template>

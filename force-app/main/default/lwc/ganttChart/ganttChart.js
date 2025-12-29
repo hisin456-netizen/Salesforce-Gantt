@@ -3,6 +3,7 @@ import { loadScript, loadStyle } from 'lightning/platformResourceLoader';
 import DHTMLX_GANTT from '@salesforce/resourceUrl/dhtmlxGantt_v2';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getLastProjectId from '@salesforce/apex/GanttDataService.getLastProjectId';
+import getProjects from '@salesforce/apex/GanttDataService.getProjects';
 import getGanttData from '@salesforce/apex/GanttDataService.getGanttData';
 import saveTask from '@salesforce/apex/GanttDataService.saveTask';
 import updateTask from '@salesforce/apex/GanttDataService.updateTask';
@@ -13,12 +14,62 @@ import reorderTask from '@salesforce/apex/GanttDataService.reorderTask';
 
 export default class GanttChart extends LightningElement {
     @api recordId; 
+    
+    // Project Selection
+    projectOptions = [];
+    selectedProjectId = '';
+    selectedProjectName = ''; // Display Name
+    isProjectSelected = false;
+
     isGanttInitialized = false;
 
+    connectedCallback() {
+        // If loaded on a Record Page, recordId is automatic
+        if (this.recordId) {
+            this.selectedProjectId = this.recordId;
+            this.isProjectSelected = true;
+        } else {
+            // If loaded on App Page (no recordId), fetch list
+            this.loadProjectList();
+        }
+    }
+
+    loadProjectList() {
+        getProjects()
+            .then(result => {
+                this.projectOptions = result.map(proj => {
+                    return { label: proj.Name, value: proj.Id };
+                });
+            })
+            .catch(error => {
+                this.showToast('Error', 'Failed to load projects: ' + error.body?.message, 'error');
+            });
+    }
+
+    handleProjectChange(event) {
+        this.selectedProjectId = event.detail.value;
+        this.recordId = this.selectedProjectId; // Sync recordId
+        this.isProjectSelected = true;
+        
+        // Trigger Gantt load if not already initialized or needs reload
+        // Since we used lwc:dom="manual", the container might need re-init if it was removed from DOM.
+        // With if:true, the DOM is fresh. We need to wait for render.
+    }
+
     renderedCallback() {
-        if (this.isGanttInitialized) {
+        // Only initialize if project is selected and container exists
+        if (!this.isProjectSelected || this.isGanttInitialized) {
             return;
         }
+
+        // We need to wait for the div to be in the DOM after isProjectSelected becomes true
+        // The condition above (!this.isProjectSelected) handles the case where it's false.
+        // But if it JUST became true, querySelector might still be null in this cycle if not carefully timed.
+        // Usually renderedCallback runs after the template update.
+        
+        const root = this.template.querySelector('.gantt-container');
+        if(!root) return; // Guard clause
+
         this.isGanttInitialized = true;
 
         Promise.all([
@@ -29,13 +80,7 @@ export default class GanttChart extends LightningElement {
                 this.initializeGantt();
             })
             .catch(error => {
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: 'Error loading DHTMLX Gantt',
-                        message: error.message,
-                        variant: 'error'
-                    })
-                );
+                this.showToast('Error loading DHTMLX Gantt', error.message, 'error');
             });
     }
 
@@ -134,24 +179,18 @@ export default class GanttChart extends LightningElement {
         console.log('🚀 loadTasks called. RecordId:', this.recordId);
 
         if (!this.recordId) {
-            console.warn('⚠️ No RecordId found. Attempting to load most recent project...');
-            getLastProjectId()
-                .then(id => {
-                    if (id) {
-                        this.recordId = id;
-                        this.loadTasks(); 
-                    } else {
-                        console.error('❌ No projects found.');
-                    }
-                })
-                .catch(error => console.error(error));
-            return; 
+            return; // Should not happen if flow is correct
         }
 
         // Standard Load without Resources
         getGanttData({ projectId: this.recordId })
             .then(result => {
                 console.log('✅ Gantt Data Loaded:', result);
+                
+                if (result && result.projectName) {
+                    this.selectedProjectName = result.projectName;
+                }
+
                 if (!result || !result.data || result.data.length === 0) {
                     console.warn('⚠️ No tasks found for this project.');
                 }
@@ -167,5 +206,14 @@ export default class GanttChart extends LightningElement {
                     })
                 );
             });
+    }
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title: title,
+                message: message,
+                variant: variant
+            })
+        );
     }
 }

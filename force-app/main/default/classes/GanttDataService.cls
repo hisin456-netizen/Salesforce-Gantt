@@ -11,6 +11,14 @@ public with sharing class GanttDataService {
         List<GanttTask> taskList = new List<GanttTask>();
         List<GanttLink> linkList = new List<GanttLink>();
 
+        // 0. Fetch Project Name
+        try {
+            Project__c proj = [SELECT Name FROM Project__c WHERE Id = :projectId LIMIT 1];
+            resultMap.put('projectName', proj.Name);
+        } catch (Exception e) {
+             resultMap.put('projectName', 'Unknown Project');
+        }
+
         // 1. Query Project Tasks
         // Adjust fields based on actual object definition
         List<ProjectTask__c> sfTasks = [
@@ -59,6 +67,15 @@ public with sharing class GanttDataService {
     public static String getLastProjectId() {
         List<Project__c> p = [SELECT Id FROM Project__c ORDER BY CreatedDate DESC LIMIT 1];
         return (p.isEmpty()) ? null : p[0].Id;
+    }
+
+    /**
+     * @description Fetch all Project records for selection
+     * @return List<Project__c>
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Project__c> getProjects() {
+        return [SELECT Id, Name FROM Project__c ORDER BY Name ASC];
     }
 
     // --- Wrapper Classes for DHTMLX Format ---
