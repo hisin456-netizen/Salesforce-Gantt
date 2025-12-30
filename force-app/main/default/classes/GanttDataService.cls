@@ -240,6 +240,13 @@ public with sharing class GanttDataService {
                  t.Priority__c = Decimal.valueOf(String.valueOf(prio));
              }
         }
+
+        if(taskMap.containsKey('progress')) {
+             Object prog = taskMap.get('progress');
+             if(prog != null) {
+                 t.PercentDone__c = Decimal.valueOf(String.valueOf(prog)) * 100;
+             }
+        }
         
         update t;
         
